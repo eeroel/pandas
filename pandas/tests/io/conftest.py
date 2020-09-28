@@ -114,6 +114,7 @@ def s3_resource(s3_base, tips_file, jsonl_file, feather_file):
         ("tips.csv.bz2", tips_file + ".bz2"),
         ("items.jsonl", jsonl_file),
         ("simple_dataset.feather", feather_file),
+        ("changing_file.csv", tips_file)
     ]
 
     def add_tips_files(bucket_name):

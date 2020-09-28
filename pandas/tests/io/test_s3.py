@@ -46,3 +46,26 @@ def test_read_with_creds_from_pub_bucket():
             "s3://gdelt-open-data/events/1981.csv", nrows=5, sep="\t", header=None
         )
         assert len(df) == 5
+
+@td.skip_if_no("s3fs")
+def test_read_changing_s3_object(s3_resource, s3_base, s3so):
+    # Ensure that reading an object from s3 works before and 
+    # after writing more data to the object
+    df1 = read_csv("s3://pandas-test/changing_file.csv", storage_options=s3so)
+
+    # duplicate the contents of the dataframe, and 
+    # write the larger dataframe into the same file
+    df2 = df1.append(df1)
+
+    import boto3
+    conn = boto3.resource("s3", endpoint_url=s3_base)
+    cli = boto3.client("s3", endpoint_url=s3_base)
+    cli.put_object(
+        Bucket="pandas-test", 
+        Key="changing_file.csv", 
+        Body=df2.to_csv(path_or_buf=None)
+        )
+    
+    # read the file with more data
+    df3 = read_csv("s3://pandas-test/changing_file.csv", index_col=0, storage_options=s3so)
+    tm.assert_equal(df2, df3)
